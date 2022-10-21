@@ -13,9 +13,9 @@ void setup() {
 
 void loop() {
   potValue = analogRead(potPin);
-  // ledValue = potValue / 4;   // easiest working way
+  // ledValue = potValue / 4;   // easiest working way (not very accurate)
   // ledValue = map(potValue, 0, 1023, 0, 255);   // predefined map function
-  ledValue = mapValue(potValue, 1023, 255);   // manual mapping function
+  ledValue = mapValue(potValue, 1023, 255);   // manual mapping function using percentages
   analogWrite(ledPin, ledValue);
 }
 
