@@ -12,7 +12,7 @@
  
  
  ### Homework 1
- 1. Blink without delay
+ #### 1. Blink without delay
   - Requirements
   > Blink an LED without using the delay function.
   - Files
@@ -21,5 +21,16 @@
   > [Link](https://github.com/tavi22/IntroductionToRobotics)
   - Live Demo
   > [Youtube Link](https://github.com/tavi22/IntroductionToRobotics)
+  
+ #### 2. Fading an LED with the potentiometer
+  - Requirements
+  > Fade an LED using the potentiometer and an arduino board.
+  - Files
+  > [Source Code](https://github.com/tavi22/IntroductionToRobotics/blob/main/homework1/homework1_p2_OM.ino)
+  - Pictures
+  > [Link](https://github.com/tavi22/IntroductionToRobotics)
+  - Live Demo
+  > [Youtube Link](https://github.com/tavi22/IntroductionToRobotics)
+  
   
   
