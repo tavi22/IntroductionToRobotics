@@ -16,21 +16,21 @@
   - Requirements
   > Blink an LED without using the delay function.
   - [Source Code](https://github.com/tavi22/IntroductionToRobotics/blob/main/homework1/homework1_p1_OM/homework1_p1_OM.ino)
-  - [Link](https://github.com/tavi22/IntroductionToRobotics)
+  - [Photos](https://github.com/tavi22/IntroductionToRobotics)
   - [Youtube Live Demo](https://github.com/tavi22/IntroductionToRobotics)
   
  #### 2. Fading an LED with the potentiometer
   - Requirements
   > Fade an LED using the potentiometer and an arduino board.
   - [Source Code](https://github.com/tavi22/IntroductionToRobotics/blob/main/homework1/homework1_p2_OM/homework1_p2_OM.ino)
-  - [Link](https://github.com/tavi22/IntroductionToRobotics)
+  - [Photos](https://github.com/tavi22/IntroductionToRobotics)
   - [Youtube Live Demo](https://github.com/tavi22/IntroductionToRobotics)
   
  #### 3. Fading an RGB LED with potentiometers
   - Requirements
   > Use a separat potentiometer in controlling each of the colors of the RGB led (Red,Green and Blue).
   - [Source Code](https://github.com/tavi22/IntroductionToRobotics/blob/main/homework1/homework1_p2_OM/homework1_p2_OM.ino)
-  - [Link](https://github.com/tavi22/IntroductionToRobotics)
+  - [Photos](https://github.com/tavi22/IntroductionToRobotics)
   - [Youtube Live Demo](https://github.com/tavi22/IntroductionToRobotics)
   
   
