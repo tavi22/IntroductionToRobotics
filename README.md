@@ -9,9 +9,10 @@
  
  ### Details
  Each homework includes requirements, implementation details, code, images and also live demos.
- 
- 
+
+---
  ### Homework 1
+ ---
  #### 1. Blink without delay
   - Requirements
   > Blink an LED without using the delay function.
