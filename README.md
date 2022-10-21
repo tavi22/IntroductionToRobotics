@@ -32,5 +32,15 @@
   - Live Demo
   > [Youtube Link](https://github.com/tavi22/IntroductionToRobotics)
   
+ #### 3. Fading an RGB LED with potentiometers
+  - Requirements
+  > Use a separat potentiometer in controlling each of the colors of the RGB led (Red,Green and Blue).
+  - Files
+  > [Source Code](https://github.com/tavi22/IntroductionToRobotics/blob/main/homework1/homework1_p2_OM.ino)
+  - Pictures
+  > [Link](https://github.com/tavi22/IntroductionToRobotics)
+  - Live Demo
+  > [Youtube Link](https://github.com/tavi22/IntroductionToRobotics)
+  
   
   
