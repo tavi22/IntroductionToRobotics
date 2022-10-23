@@ -17,23 +17,23 @@
  #### 1. Blink without delay
   - Requirements
   > Blink an LED without using the delay function.
-  - [Source Code](https://github.com/tavi22/IntroductionToRobotics/blob/main/homework1/homework1_p1_OM/homework1_p1_OM.ino)
-  - [Photos](https://github.com/tavi22/IntroductionToRobotics)
-  - [Youtube Live Demo](https://github.com/tavi22/IntroductionToRobotics)
+  - [Source Code](https://github.com/tavi22/IntroductionToRobotics/blob/main/homework1/blink_led/blink_led.ino)
+  - [Photos](https://drive.google.com/drive/folders/1iQT_576j3IRJHqva5ghLSCc7W3Y1IN8-)
+  - [Youtube Live Demo](https://youtu.be/QeaDR12CcR8)
   
  #### 2. Fading an LED with the potentiometer
   - Requirements
   > Fade an LED using the potentiometer and an arduino board.
-  - [Source Code](https://github.com/tavi22/IntroductionToRobotics/blob/main/homework1/homework1_p2_OM/homework1_p2_OM.ino)
-  - [Photos](https://github.com/tavi22/IntroductionToRobotics)
-  - [Youtube Live Demo](https://github.com/tavi22/IntroductionToRobotics)
+  - [Source Code](https://github.com/tavi22/IntroductionToRobotics/blob/main/homework1/fade_led_potentiometer/fade_led_potentiometer.ino)
+  - [Photos](https://drive.google.com/drive/folders/1iQT_576j3IRJHqva5ghLSCc7W3Y1IN8-)
+  - [Youtube Live Demo](https://youtu.be/pq1yFsIwSf0)
   
  #### 3. Fading an RGB LED with potentiometers
   - Requirements
-  > Use a separat potentiometer in controlling each of the colors of the RGB led (Red,Green and Blue).
-  - [Source Code](https://github.com/tavi22/IntroductionToRobotics/blob/main/homework1/homework1_p2_OM/homework1_p2_OM.ino)
-  - [Photos](https://github.com/tavi22/IntroductionToRobotics)
-  - [Youtube Live Demo](https://github.com/tavi22/IntroductionToRobotics)
+  > Use a separat potentiometer in controlling each of the colors of the RGB led (Red, Green and Blue).
+  - [Source Code](https://github.com/tavi22/IntroductionToRobotics/blob/main/homework1/fade_rgb_potentiometers/fade_rgb_potentiometers.ino)
+  - [Photos](https://drive.google.com/drive/folders/1iQT_576j3IRJHqva5ghLSCc7W3Y1IN8-)
+  - [Youtube Live Demo](https://youtu.be/GYqhLmCbGYI)
   
   ---
   ### Homework 2
