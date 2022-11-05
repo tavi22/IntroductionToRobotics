@@ -9,28 +9,27 @@ const int pinG = 10;
 const int pinDP = 11;
 
 // joystick variables
-const int pinSW = 2; // digital pin connected to switch output
-const int pinX = A1; // A1 - analog pin connected to X output
-const int pinY = A0; // A0 - analog pin connected to Y output
+const int pinSW = 2;  // digital pin connected to switch output
+const int pinX = A1;  // A1 - analog pin connected to X output
+const int pinY = A0;  // A0 - analog pin connected to Y output
 
 // segment idexes for each led
-byte aIndex = 0;
-byte bIndex = 1;
-byte cIndex = 2;
-byte dIndex = 3;
-byte eIndex = 4;
-byte fIndex = 5;
-byte gIndex = 6;
-byte dpIndex = 7;
+const byte aIndex = 0;
+const byte bIndex = 1;
+const byte cIndex = 2;
+const byte dIndex = 3;
+const byte eIndex = 4;
+const byte fIndex = 5;
+const byte gIndex = 6;
+const byte dpIndex = 7;
 
 // modify if you have common anode
-bool commonAnode = false; 
+bool commonAnode = false;
 byte state = HIGH;
 
 // led variables
 volatile byte currentLed = 0;
 unsigned long lastBlink = 0;
-unsigned long timer = 0;
 const int blinkDelay = 500;
 
 volatile byte currentState = 1;
@@ -38,7 +37,7 @@ volatile byte currentState = 1;
 // 7 digit display variables
 const int segSize = 8;
 
-int segments[segSize] = { 
+int segments[segSize] = {
   pinA, pinB, pinC, pinD, pinE, pinF, pinG, pinDP
 };
 
@@ -58,6 +57,7 @@ const int lowerThreshold = 200;
 const int upperThreshold = 800;
 const int highMiddleThreshold = 600;
 const int lowMiddleThreshold = 400;
+volatile bool joyMoved = 0;
 
 // button variables
 const int debounceDelay = 50;
@@ -74,14 +74,14 @@ void setup() {
     state = !state;
   }
 
-  pinMode(pinSW, INPUT_PULLUP); // activate pull-up resistor on the push-button pin
-  
+  pinMode(pinSW, INPUT_PULLUP);  // activate pull-up resistor on the push-button pin
+
   // Start the serial communication.
   Serial.begin(9600);
 }
 
 void loop() {
-  displaySegments(segments);  
+  displaySegments(segments);
   checkState(currentState, currentLed);
 
   xValue = analogRead(pinX);
@@ -107,22 +107,22 @@ void loop() {
         } else {
           currentState = 1;
           segmentStates[currentLed] = trueSegmentStates[currentLed];
-          incrementCurrentLed();
         }
       }
     }
   }
-  
+
   lastReading = reading;
 }
 
 
 void resetSegments() {
- for (int i = 0; i < segSize; i++) {
-   segmentStates[i] = LOW;
- }
+  for (int i = 0; i < segSize; i++) {
+    segmentStates[i] = LOW;
+    trueSegmentStates[i] = LOW;
+  }
 
- currentLed = dpIndex;
+  currentLed = dpIndex;
 }
 
 void displaySegments(int segments[]) {
@@ -135,29 +135,36 @@ void displaySegments(int segments[]) {
 
 void checkState(byte currentState, byte currentLed) {
   if (currentState == 1) {
-    
+
     if (millis() - lastBlink >= blinkDelay) {
       lastBlink = millis();
       segmentStates[currentLed] = !segmentStates[currentLed];
     }
 
-    if (xValue > upperThreshold) {
+    if (xValue > upperThreshold && yValue < highMiddleThreshold && yValue > lowMiddleThreshold && joyMoved == 0) {
       move('r');  // move right
+      joyMoved = 1;
     }
-    if (yValue > upperThreshold) {
+    if (yValue > upperThreshold && xValue < highMiddleThreshold && xValue > lowMiddleThreshold && joyMoved == 0) {
       move('u');  // move up
+      joyMoved = 1;
     }
-    if (xValue < lowerThreshold) {
+    if (xValue < lowerThreshold && yValue < highMiddleThreshold && yValue > lowMiddleThreshold && joyMoved == 0) {
       move('l');  // move left
+      joyMoved = 1;
     }
-    if (yValue < lowerThreshold) {
+    if (yValue < lowerThreshold && xValue < highMiddleThreshold && xValue > lowMiddleThreshold && joyMoved == 0) {
       move('d');  // move right
+      joyMoved = 1;
+    }
+    if (xValue < highMiddleThreshold && xValue > lowMiddleThreshold && yValue < highMiddleThreshold && yValue > lowMiddleThreshold) {
+      joyMoved = 0;
     }
   }
 
   else {
     segmentStates[currentLed] = trueSegmentStates[currentLed];
-    displaySegments(segments);  
+    displaySegments(segments);
 
     if (xValue > upperThreshold && yValue < highMiddleThreshold && yValue > lowMiddleThreshold) {
       trueSegmentStates[currentLed] = HIGH;
@@ -167,26 +174,121 @@ void checkState(byte currentState, byte currentLed) {
   }
 }
 
-void incrementCurrentLed() {
-  if (currentLed == 7) {
-    currentLed = 0;
-  }
-  else currentLed++;
-}
-
 void move(char direction) {
-  switch(direction) {
+  switch (direction) {
     case 'r':
-      Serial.println("Miscare dreapta");
+      switch (currentLed) {
+        case aIndex:
+          currentLed = bIndex;
+          segmentStates[aIndex] = trueSegmentStates[aIndex];
+          break;
+        case cIndex:
+          currentLed = dpIndex;
+          segmentStates[cIndex] = trueSegmentStates[cIndex];
+          break;
+        case dIndex:
+          currentLed = cIndex;
+          segmentStates[dIndex] = trueSegmentStates[dIndex];
+          break;
+        case eIndex:
+          currentLed = cIndex;
+          segmentStates[eIndex] = trueSegmentStates[eIndex];
+          break;
+        case fIndex:
+          currentLed = bIndex;
+          segmentStates[fIndex] = trueSegmentStates[fIndex];
+          break;
+        default:
+          break;
+      }
       break;
     case 'u':
+      switch (currentLed) {
+        case bIndex:
+          currentLed = aIndex;
+          segmentStates[bIndex] = trueSegmentStates[bIndex];
+          break;
+        case cIndex:
+          currentLed = gIndex;
+          segmentStates[cIndex] = trueSegmentStates[cIndex];
+          break;
+        case dIndex:
+          currentLed = gIndex;
+          segmentStates[dIndex] = trueSegmentStates[dIndex];
+          break;
+        case eIndex:
+          currentLed = gIndex;
+          segmentStates[eIndex] = trueSegmentStates[eIndex];
+          break;
+        case fIndex:
+          currentLed = aIndex;
+          segmentStates[fIndex] = trueSegmentStates[fIndex];
+          break;
+        case gIndex:
+          currentLed = aIndex;
+          segmentStates[gIndex] = trueSegmentStates[gIndex];
+          break;
+        default:
+          break;
+      }
       break;
     case 'l':
+      switch (currentLed) {
+        case aIndex:
+          currentLed = fIndex;
+          segmentStates[aIndex] = trueSegmentStates[aIndex];
+          break;
+        case bIndex:
+          currentLed = fIndex;
+          segmentStates[bIndex] = trueSegmentStates[bIndex];
+          break;
+        case cIndex:
+          currentLed = eIndex;
+          segmentStates[cIndex] = trueSegmentStates[cIndex];
+          break;
+        case dIndex:
+          currentLed = eIndex;
+          segmentStates[dIndex] = trueSegmentStates[dIndex];
+          break;
+        case dpIndex:
+          currentLed = cIndex;
+          segmentStates[dpIndex] = trueSegmentStates[dpIndex];
+          break;
+        default:
+          break;
+      }
       break;
     case 'd':
+      switch (currentLed) {
+        case aIndex:
+          currentLed = gIndex;
+          segmentStates[aIndex] = trueSegmentStates[aIndex];
+          break;
+        case bIndex:
+          currentLed = gIndex;
+          segmentStates[bIndex] = trueSegmentStates[bIndex];
+          break;
+        case cIndex:
+          currentLed = dIndex;
+          segmentStates[cIndex] = trueSegmentStates[cIndex];
+          break;
+        case eIndex:
+          currentLed = dIndex;
+          segmentStates[eIndex] = trueSegmentStates[eIndex];
+          break;
+        case fIndex:
+          currentLed = gIndex;
+          segmentStates[fIndex] = trueSegmentStates[fIndex];
+          break;
+        case gIndex:
+          currentLed = dIndex;
+          segmentStates[gIndex] = trueSegmentStates[gIndex];
+          break;
+        default:
+          break;
+      }
       break;
     default:
       break;
   }
 }
-
