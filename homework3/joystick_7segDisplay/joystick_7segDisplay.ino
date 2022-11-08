@@ -50,7 +50,7 @@ byte trueSegmentStates[segSize] = {
 };  // copy of the array from above, which contains the true led values
 
 // joystick variables
-byte swState = LOW;
+volatile byte swState = LOW;
 int xValue = 0;
 int yValue = 0;
 const int lowerThreshold = 200;
@@ -77,7 +77,7 @@ void setup() {
   pinMode(pinSW, INPUT_PULLUP);  // activate pull-up resistor on the push-button pin
 
   // Start the serial communication.
-  Serial.begin(9600);
+  // Serial.begin(9600);
 }
 
 void loop() {
@@ -116,6 +116,7 @@ void loop() {
 }
 
 
+// turn off all segments and move to dp
 void resetSegments() {
   for (int i = 0; i < segSize; i++) {
     segmentStates[i] = LOW;
@@ -125,6 +126,7 @@ void resetSegments() {
   currentLed = dpIndex;
 }
 
+
 void displaySegments(int segments[]) {
   for (int i = 0; i < segSize; i++) {
     digitalWrite(segments[i], segmentStates[i]);
@@ -133,14 +135,17 @@ void displaySegments(int segments[]) {
   // digitalWrite(segments[segSize-1], dpState);
 }
 
+
 void checkState(byte currentState, byte currentLed) {
   if (currentState == 1) {
 
+    // state 1: blink current led segment and move between segments with the joystick
     if (millis() - lastBlink >= blinkDelay) {
       lastBlink = millis();
       segmentStates[currentLed] = !segmentStates[currentLed];
     }
 
+    // handle joystick movements
     if (xValue > upperThreshold && yValue < highMiddleThreshold && yValue > lowMiddleThreshold && joyMoved == 0) {
       move('r');  // move right
       joyMoved = 1;
@@ -163,6 +168,8 @@ void checkState(byte currentState, byte currentLed) {
   }
 
   else {
+    
+    // state 2: turn current led on/off by moving the joystick to right/left
     segmentStates[currentLed] = trueSegmentStates[currentLed];
     displaySegments(segments);
 
@@ -174,6 +181,8 @@ void checkState(byte currentState, byte currentLed) {
   }
 }
 
+// handle joystick movements in state 1
+// define all possible movements from each state in every direction
 void move(char direction) {
   switch (direction) {
     case 'r':
