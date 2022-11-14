@@ -64,7 +64,7 @@ const int blinkDelay = 500;
 
 // button variables
 const int debounceDelay = 50;
-unsigned long int pressedTime = 0;
+unsigned long int lastDebounce = 0;
 unsigned long int releasedTime = 0;
 const int longPressDelay = 1000;
 volatile byte lastReading = LOW;
@@ -74,6 +74,8 @@ void setup() {
   pinMode(latchPin, OUTPUT);
   pinMode(clockPin, OUTPUT);
   pinMode(dataPin, OUTPUT);
+  pinMode(pinSW, INPUT_PULLUP);  // activate pull-up resistor on the push-button pin
+
 
   for (int i = 0; i < displayCount; i++) {
     pinMode(displayDigits[i], OUTPUT);
@@ -84,16 +86,45 @@ void setup() {
 }
 
 void loop() {
+  xValue = analogRead(pinX);
+  yValue = analogRead(pinY);
+  byte reading = digitalRead(pinSW);
 
+  writeCharacters(displayCharacters);
+
+  // handle button click
+  if (lastReading != reading) {
+      lastDebounce = millis();
+
+    }
+  else if ((millis() - lastDebounce) >= longPressDelay && reading == LOW && currentState == 2) {
+    resetDisplay();
+  }
+
+  if ((millis() - lastDebounce) >= debounceDelay) {
+    if (swState != reading) {
+      swState = reading;
+
+      if (!swState) {
+        if (currentState == 1) {
+          currentState = 2;
+          turnOnDP();
+        } else {
+          currentState = 1;
+        }
+      }
+    }
+  }
+
+  lastReading = reading;
+
+  // handle each state
   if (currentState == 1) {
-    writeCharacters(displayCharacters);
     blinkDP();
     handleDisplayChange();
-    handleButtonClick();
 
   } else {
     handleCharacterChange();
-    handleButtonClick();
   }
   
 }
@@ -110,15 +141,18 @@ void blinkDP() {
   }
 }
 
+// change which display to modify with x axis
 void handleDisplayChange() {
   if (xValue > upperThreshold && yValue < highMiddleThreshold && yValue > lowMiddleThreshold && joyMoved == 0) {
     if (currentDisplay < 3) {
+      turnOffDP();
       currentDisplay++;
     }
     joyMoved++;
 
   } else if (xValue < lowerThreshold && yValue < highMiddleThreshold && yValue > lowMiddleThreshold && joyMoved == 0) {
     if (currentDisplay > 0) {
+      turnOffDP();
       currentDisplay--;
     }
     joyMoved++;
@@ -128,17 +162,18 @@ void handleDisplayChange() {
     }
 }
 
-void handleButtonClick() {
-// to do
-}
-
+// modify the characters with y axis
 void handleCharacterChange() {
+  int lastValue = lookUpCharacter(displayCharacters[currentDisplay] - 1);
+
   if (yValue > upperThreshold && xValue < highMiddleThreshold && xValue > lowMiddleThreshold && joyMoved == 0) {
-    // to do
+    increaseDisplayCharacter(lastValue);
+    turnOnDP();
     joyMoved++;
 
   } else if (yValue < lowerThreshold && xValue < highMiddleThreshold && xValue > lowMiddleThreshold && joyMoved == 0) {
-    // to do
+    decreaseDisplayCharacter(lastValue);
+    turnOnDP();
     joyMoved++;
 
   } else if (xValue < highMiddleThreshold && xValue > lowMiddleThreshold && yValue < highMiddleThreshold && yValue > lowMiddleThreshold) {
@@ -166,7 +201,6 @@ void activateDisplay(int displayNumber) {
   digitalWrite(displayDigits[displayNumber], LOW);
 }
 
-
 void writeCharacters(int displayCharacters[]) {
   int currentIndex = displayCount - 1;
   int displayDigit = 0;
@@ -186,4 +220,46 @@ void writeCharacters(int displayCharacters[]) {
     // move the index
     currentIndex--;
   }
+}
+
+void resetDisplay() {
+  for (int i = 0; i < displayCount; i++) {
+    displayCharacters[i] = byteEncodings[0];
+  }
+  currentState = 1;
+}
+
+void turnOffDP() {
+  if (displayCharacters[currentDisplay] % 2 != 0) {
+        displayCharacters[currentDisplay]--;
+      }
+}
+
+void turnOnDP() {
+  if (displayCharacters[currentDisplay] % 2 == 0) {
+        displayCharacters[currentDisplay]++;
+      }
+}
+
+int lookUpCharacter(int character) {
+  for (int i = 0; i < encodingsNumber; i++) {
+    if (byteEncodings[i] == character) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+void increaseDisplayCharacter(int lastValue) {
+  if (lastValue == 15) {
+    displayCharacters[currentDisplay] = byteEncodings[0];
+  } else
+  displayCharacters[currentDisplay] = byteEncodings[lastValue + 1];
+}
+
+void decreaseDisplayCharacter(int lastValue) {
+  if (lastValue == 0) {
+    displayCharacters[currentDisplay] = byteEncodings[15];
+  } else
+  displayCharacters[currentDisplay] = byteEncodings[lastValue - 1];
 }
