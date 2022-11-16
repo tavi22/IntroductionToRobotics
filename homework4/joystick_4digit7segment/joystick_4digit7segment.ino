@@ -209,10 +209,10 @@ void writeCharacters(int displayCharacters[]) {
   while (currentIndex >= 0) {
     // get the last character of the display
     lastCharacter = displayCharacters[currentIndex];
-    // enable only the display digit for that 
-    activateDisplay(displayDigit);
     // send the number to the display
     writeReg(lastCharacter);
+    // enable only the display digit for that 
+    activateDisplay(displayDigit);
 
     delay(5);
     // increment the display digit
@@ -227,6 +227,7 @@ void resetDisplay() {
     displayCharacters[i] = byteEncodings[0];
   }
   currentState = 1;
+  currentDisplay = 3;
 }
 
 void turnOffDP() {
