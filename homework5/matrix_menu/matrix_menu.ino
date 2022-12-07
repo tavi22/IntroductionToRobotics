@@ -43,11 +43,18 @@ byte yLastPos = 0;
 const byte moveInterval = 100;
 unsigned long long lastMoved = 0;
 bool matrixChanged = true;
-byte currentPos = 0;
-byte lastPos = 0;
+byte xFood = random(8);
+byte yFood = random(8);
+byte xLastFood = 0;
+byte yLastFood = 0;
+unsigned long previousMillis = 0;
+const long interval = 250;
+unsigned long score = 0;
+int lives = 4;
+int health = lives;
 
 byte matrix[matrixSize][matrixSize] = {
-  {0,0,0,0,0,0,0,1},
+  {0,0,0,0,0,0,0,0},
   {0,0,0,0,0,0,0,0},
   {0,0,0,0,0,0,0,0},
   {0,0,0,0,0,0,0,0},
@@ -55,17 +62,6 @@ byte matrix[matrixSize][matrixSize] = {
   {0,0,0,0,0,0,0,0},
   {0,0,0,0,0,0,0,0},
   {0,0,0,0,0,0,0,0}
-};
-
-byte matrixByte[matrixSize] = {
-  B00000000,
-  B01000100,
-  B00101000,
-  B00010000,
-  B00010000,
-  B00010000,
-  B00000000,
-  B00000000
 };
 
 // auxiliary menu variables
@@ -98,6 +94,29 @@ byte menuCursor = 0;
 // which menu items are displayed
 byte displayState = 0;
 
+// special LCD displays
+byte heart1[] = {
+  0x00,
+  0x00,
+  0x0A,
+  0x15,
+  0x11,
+  0x0A,
+  0x04,
+  0x00
+};
+
+byte heart2[] = {
+  0x00,
+  0x00,
+  0x0A,
+  0x1F,
+  0x1F,
+  0x0E,
+  0x04,
+  0x00
+};
+
 
 // display welcome message for 2 seconds before starting the application
 
@@ -105,14 +124,17 @@ void setup() {
   pinMode(pinSW, INPUT_PULLUP);  // activate pull-up resistor on the push-button pin
 
   lcd.begin(16,2);
-  lcd.print("hello, world!");
+  lcd.createChar(1, heart1);
+  lcd.createChar(2, heart2);
 
-  Serial.begin(9600);
+  // Serial.begin(9600);
   // the zero refers to the MAX7219 number, it iszero for 1 chip
   lc.shutdown(0, false);  // turn off power saving,enables display
   lc.setIntensity(0, matrixBrightness);  // sets brightness(0~15 possiblevalues)
   lc.clearDisplay(0);  // clear screen
   matrix[xPos][yPos] = 1;
+  matrix[xFood][yFood] = 1;
+  
 
   lcd.begin(16, 2);
   lcd.print("Interesting Name");
@@ -131,6 +153,7 @@ void loop() {
   if (state == 0) {
     displayMenu();
   } else {
+    play();
     displayGameUI();
   }  
 }
@@ -159,45 +182,69 @@ void displayMenu() {
 void displayGameUI() {
   // to do
   lcd.setCursor(0, 0);
-  lcd.print("Playing Awesome");
+  lcd.print("  Awesome Game");
   lcd.setCursor(0, 1);
-  lcd.print("  *** GAME ***");
+  lcd.print("Score: ");
+  lcd.print(score);
+  lcd.print("    ");
+  int healthCopy = health;
+  for (int i = 0; i < lives; i++) {
+    if (healthCopy > 0) {
+      lcd.write(2);
+      healthCopy--;
+    } else {
+      lcd.write(1);
+    }
+  }
+  // quit the game by pressing the joystick (testing purposes)
   handleJoystickPress();
 }
 
-// starts the game
-void runGame() {
-  //  updateByteMatrix();
+// game process
+void play() {
+
+  // food led blinking
+  if (millis() - previousMillis >= interval) {
+    previousMillis = millis();
+
+    if (!matrix[xFood][yFood]) {
+      matrix[xFood][yFood] = 1;
+      lc.setLed(0, xFood, yFood, 1);
+    } else {
+      matrix[xFood][yFood] = 0;
+      lc.setLed(0, xFood, yFood, 0);
+    }
+  }
+
+  // player movement
   if(millis() - lastMoved > moveInterval) {
     // game logic
     updatePositions();
-    lastMoved =millis();
+    lastMoved = millis();
   }
   if(matrixChanged == true) {
-    // matrix display logi
+    // matrix display logic
     updateMatrix();
     matrixChanged = false;
   }
-}
 
-
-void generateFood() {
-  // lastFoodPos = currentPos;
-  // // newFoodPos = random(ceva);
-  // matrix[xLastFood][yLastFood] = 0;
-  // matrix[xNewFood][yNewFood] = 1;
-  matrixChanged = true;
-}
-
-void updateByteMatrix() {
-  for(int row =0; row < matrixSize; row++) {
-    lc.setRow(0, row, matrixByte[row]);
+  // eat the food => increase score => generate new food
+  if (xPos == xFood && yPos == yFood) {
+    score ++;
+    generateFood();
   }
 }
 
+void generateFood() {
+  xFood = random(8);
+  yFood = random(8);
+  matrix[xFood][yFood] = 1;
+  matrixChanged = true;
+}
+
 void updateMatrix() {
-  for(int row =0; row < matrixSize; row++) {
-    for(int col =0; col < matrixSize; col++) {
+  for(int row = 0; row < matrixSize; row++) {
+    for(int col = s0; col < matrixSize; col++) {
       lc.setLed(0, row, col, matrix[row][col]);
     }
   }
@@ -211,51 +258,52 @@ void updatePositions() {
   yLastPos = yPos;
   
   if(xValue < lowerThreshold) {
-    if(xPos < matrixSize -1) {
+    if(xPos < matrixSize - 1) {
       xPos++;
     }
     else {
-      xPos =0;
+      xPos = 0;
     }
   }
 
   if(xValue > upperThreshold) {
-    if(xPos >0) {
+    if(xPos > 0) {
       xPos--;
     }
     else {
-      xPos = matrixSize -1;
+      xPos = matrixSize - 1;
     }
   }
   
   if(yValue > upperThreshold) {
-    if(yPos < matrixSize -1) {
+    if(yPos < matrixSize - 1) {
       yPos++;
     }
     else {
-      yPos =0;
+      yPos = 0;
     }
   }
   
   if(yValue < lowerThreshold) {
-    if(yPos >0) {
+    if(yPos > 0) {
       yPos--;
     }
     else {
-      yPos = matrixSize -1;
+      yPos = matrixSize - 1;
     }
   }
   
   if(xPos != xLastPos || yPos != yLastPos) {
     matrixChanged = true;
-    matrix[xLastPos][yLastPos] =0;
-    matrix[xPos][yPos] =1;
+    matrix[xLastPos][yLastPos] = 0;
+    matrix[xPos][yPos] = 1;
   }
 }
 
 // handle joystick movement for menu
 void handleJoystickYaxis() {
 
+  // menu items logic is to always see the next available option on the display
   if (yValue > upperThreshold && xValue < highMiddleThreshold && xValue > lowMiddleThreshold && joyMoved == 0) {
     if (menuCursor != 0) {
       menuCursor--;
@@ -289,7 +337,7 @@ void handleJoystickYaxis() {
     }
 }
 
-// handle joystick press in menu
+// handle joystick press
 void handleJoystickPress() {
   if (lastReading != reading) {
       lastDebounce = millis();
@@ -302,11 +350,8 @@ void handleJoystickPress() {
           switch(menuCursor) {
             case 0:
               if (state == 0) {
-                menuCursor = 0;
-                displayState = 0;
                 state = 1;
                 lcd.clear();
-                runGame();
               } else {
                 state = 0;
                 lcd.clear();
