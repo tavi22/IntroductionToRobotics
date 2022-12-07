@@ -7,7 +7,8 @@
  2. [Homework 1](#homework-1)
  3. [Homework 2](#homework-2)
  4. [Homework 3](#homework-3)
- 4. [Homework 4](#homework-4)
+ 5. [Homework 4](#homework-4)
+ 6. [Homework 5](#homework-5)
  
  
  
@@ -50,3 +51,12 @@
   - [Source Code](https://github.com/tavi22/IntroductionToRobotics/blob/main/homework4/joystick_4digit7segment/joystick_4digit7segment.ino)
   - [Photos](https://drive.google.com/drive/folders/1cJsCnU3AD7_xefO-q2OeXbFUu9-3cQBX?usp=share_link)
   - [Youtube Live Demo](https://www.youtube.com/watch?v=a1QfvwHXO98)
+  
+  ---
+  ### Homework 5
+  ---
+  - Requirements
+  > Use a joystick to navigate through the matrix menu. 
+  - [Source Code](https://github.com/tavi22/IntroductionToRobotics/blob/main/homework5/matrix_menu/matrix_menu.ino)
+  - [Photos](TBD)
+  - [Youtube Live Demo](TBD)
