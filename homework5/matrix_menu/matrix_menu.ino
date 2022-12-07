@@ -1,0 +1,345 @@
+#include <LiquidCrystal.h>
+#include "LedControl.h"
+
+// LCD variables
+const byte RS = 9;
+const byte enable = 8;
+const byte d4 = 7;
+const byte d5 = 6;
+const byte d6 = 5;
+const byte d7 = 4;
+LiquidCrystal lcd(RS,enable,d4,d5,d6,d7);
+
+// joystick variables
+const int pinSW = 2;  // digital pin connected to switch output
+const int pinX = A1;  // A1 - analog pin connected to X output
+const int pinY = A0;  // A0 - analog pin connected to Y output
+byte swState = LOW;
+int xValue = 0;
+int yValue = 0;
+const int lowerThreshold = 200;
+const int upperThreshold = 800;
+const int highMiddleThreshold = 600;
+const int lowMiddleThreshold = 400;
+bool joyMoved = 0;
+const int debounceDelay = 50;
+unsigned long int lastDebounce = 0;
+byte lastReading = LOW;
+byte reading = LOW;
+
+// matrix variables
+const byte dinPin = 12;
+const byte clockPin = 11;
+const byte loadPin = 10;
+const byte matrixSize = 8;
+LedControl lc = LedControl(dinPin, clockPin, loadPin,1);  //DIN, CLK, LOAD, No.
+
+// auxiliary matrix variables
+byte matrixBrightness = 2;
+byte xPos = 0;
+byte yPos = 0;
+byte xLastPos = 0;
+byte yLastPos = 0;
+const byte moveInterval = 100;
+unsigned long long lastMoved = 0;
+bool matrixChanged = true;
+byte currentPos = 0;
+byte lastPos = 0;
+
+byte matrix[matrixSize][matrixSize] = {
+  {0,0,0,0,0,0,0,1},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0}
+};
+
+byte matrixByte[matrixSize] = {
+  B00000000,
+  B01000100,
+  B00101000,
+  B00010000,
+  B00010000,
+  B00010000,
+  B00000000,
+  B00000000
+};
+
+// auxiliary menu variables
+const byte menuLength = 5;
+const byte submenuLength = 6;
+const long delayPeriod = 2000;
+
+String menuItems[menuLength] = {
+  "Start",
+  "Leaderboard",
+  "Settings",
+  "About",
+  "How to play"  
+};
+
+String settingsSubmenu[submenuLength] = {
+  "Player name",
+  "Difficulty",
+  "LCD contrast",
+  "LCD brightness",
+  "Matrix brightness",
+  "Audio"
+};
+
+// state 0 is when the menu is displayed and state 1 means the game has started
+byte state = 0;
+byte lastState = 0;
+// current menu option selected
+byte menuCursor = 0;
+// which menu items are displayed
+byte displayState = 0;
+
+
+// display welcome message for 2 seconds before starting the application
+
+void setup() {
+  pinMode(pinSW, INPUT_PULLUP);  // activate pull-up resistor on the push-button pin
+
+  lcd.begin(16,2);
+  lcd.print("hello, world!");
+
+  Serial.begin(9600);
+  // the zero refers to the MAX7219 number, it iszero for 1 chip
+  lc.shutdown(0, false);  // turn off power saving,enables display
+  lc.setIntensity(0, matrixBrightness);  // sets brightness(0~15 possiblevalues)
+  lc.clearDisplay(0);  // clear screen
+  matrix[xPos][yPos] = 1;
+
+  lcd.begin(16, 2);
+  lcd.print("Interesting Name");
+  lcd.setCursor(4, 1);
+  lcd.print("Welcome!");
+
+  delay(delayPeriod);
+  lcd.clear();
+}
+
+void loop() {
+  xValue = analogRead(pinX);
+  yValue = analogRead(pinY);
+  reading = digitalRead(pinSW);
+  
+  if (state == 0) {
+    displayMenu();
+  } else {
+    displayGameUI();
+  }  
+}
+
+void displayMenu() {
+  int n = 0;
+  handleJoystickYaxis();
+  handleJoystickPress();
+  
+  for (int i = 0; i < 2; i++) {
+    int j = i + displayState;
+    if (j == menuCursor) {
+      lcd.setCursor(0, n);
+      lcd.print("*");
+      lcd.print(menuItems[j]);
+      n++;
+    } else {
+      lcd.setCursor(0, n);
+      lcd.print(" ");
+      lcd.print(menuItems[j]);
+      n++;
+    }
+  }
+}
+
+void displayGameUI() {
+  // to do
+  lcd.setCursor(0, 0);
+  lcd.print("Playing Awesome");
+  lcd.setCursor(0, 1);
+  lcd.print("  *** GAME ***");
+  handleJoystickPress();
+}
+
+// starts the game
+void runGame() {
+  //  updateByteMatrix();
+  if(millis() - lastMoved > moveInterval) {
+    // game logic
+    updatePositions();
+    lastMoved =millis();
+  }
+  if(matrixChanged == true) {
+    // matrix display logi
+    updateMatrix();
+    matrixChanged = false;
+  }
+}
+
+
+void generateFood() {
+  // lastFoodPos = currentPos;
+  // // newFoodPos = random(ceva);
+  // matrix[xLastFood][yLastFood] = 0;
+  // matrix[xNewFood][yNewFood] = 1;
+  matrixChanged = true;
+}
+
+void updateByteMatrix() {
+  for(int row =0; row < matrixSize; row++) {
+    lc.setRow(0, row, matrixByte[row]);
+  }
+}
+
+void updateMatrix() {
+  for(int row =0; row < matrixSize; row++) {
+    for(int col =0; col < matrixSize; col++) {
+      lc.setLed(0, row, col, matrix[row][col]);
+    }
+  }
+}
+
+void updatePositions() {
+  xValue =analogRead(pinX);
+  yValue =analogRead(pinY);
+
+  xLastPos = xPos;
+  yLastPos = yPos;
+  
+  if(xValue < lowerThreshold) {
+    if(xPos < matrixSize -1) {
+      xPos++;
+    }
+    else {
+      xPos =0;
+    }
+  }
+
+  if(xValue > upperThreshold) {
+    if(xPos >0) {
+      xPos--;
+    }
+    else {
+      xPos = matrixSize -1;
+    }
+  }
+  
+  if(yValue > upperThreshold) {
+    if(yPos < matrixSize -1) {
+      yPos++;
+    }
+    else {
+      yPos =0;
+    }
+  }
+  
+  if(yValue < lowerThreshold) {
+    if(yPos >0) {
+      yPos--;
+    }
+    else {
+      yPos = matrixSize -1;
+    }
+  }
+  
+  if(xPos != xLastPos || yPos != yLastPos) {
+    matrixChanged = true;
+    matrix[xLastPos][yLastPos] =0;
+    matrix[xPos][yPos] =1;
+  }
+}
+
+// handle joystick movement for menu
+void handleJoystickYaxis() {
+
+  if (yValue > upperThreshold && xValue < highMiddleThreshold && xValue > lowMiddleThreshold && joyMoved == 0) {
+    if (menuCursor != 0) {
+      menuCursor--;
+    } else menuCursor = 4;
+    if (displayState != 0 && displayState != 3 || displayState == 3 && menuCursor == 3) {
+      displayState--;
+    } else if (displayState == 0 && menuCursor == 0) {
+      displayState = 0;
+    }
+    else displayState = 3;
+
+    joyMoved++;
+    lcd.clear();
+
+  } else if (yValue < lowerThreshold && xValue < highMiddleThreshold && xValue > lowMiddleThreshold && joyMoved == 0) {
+    if (menuCursor != 4) {
+      menuCursor++;
+    } else menuCursor = 0;
+    if (displayState != 3) {
+      displayState++;    
+    } else if (displayState == 3 && menuCursor == 4) {
+      displayState = 3;
+    }
+    else displayState = 0;
+
+    joyMoved++;
+    lcd.clear();
+
+  } else if (xValue < highMiddleThreshold && xValue > lowMiddleThreshold && yValue < highMiddleThreshold && yValue > lowMiddleThreshold) {
+      joyMoved = 0;
+    }
+}
+
+// handle joystick press in menu
+void handleJoystickPress() {
+  if (lastReading != reading) {
+      lastDebounce = millis();
+    }
+  if ((millis() - lastDebounce) >= debounceDelay) {
+    if (swState != reading) {
+      swState = reading;
+
+      if (!swState) {
+          switch(menuCursor) {
+            case 0:
+              if (state == 0) {
+                menuCursor = 0;
+                displayState = 0;
+                state = 1;
+                lcd.clear();
+                runGame();
+              } else {
+                state = 0;
+                lcd.clear();
+              }
+              break;
+            case 1:
+              displayLeaderboard();
+            case 2:
+              displaySettings();
+            case 3:
+              displayAbout();
+            case 4:
+              displayHowTo();
+          }
+        }
+      }
+    }
+
+  lastReading = reading;
+}
+
+void displayLeaderboard() {
+  // to do
+}
+
+void displaySettings() {
+  // to do
+}
+
+void displayAbout() {
+  // to do
+}
+
+void displayHowTo() {
+  // to do
+}
