@@ -71,5 +71,6 @@
   * Settings menu (clicking the settings options does not work)
   * About page
   * How to play page
+  * Menu overflow/underflow
 
   </details>
