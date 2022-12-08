@@ -1,5 +1,6 @@
 #include <LiquidCrystal.h>
-#include "LedControl.h"
+#include <LedControl.h>
+#include <EEPROM.h>
 
 // LCD variables
 const byte RS = 9;
@@ -49,7 +50,6 @@ byte xLastFood = 0;
 byte yLastFood = 0;
 unsigned long previousMillis = 0;
 const long interval = 250;
-unsigned long score = 0;
 int lives = 4;
 int health = lives;
 
@@ -117,6 +117,14 @@ byte heart2[] = {
   0x00
 };
 
+struct Player {
+  int score;
+  char name[10];
+};
+
+Player currentPlayer = {0, "Newbie"};
+// const int structSize = 8;
+
 
 // display welcome message for 2 seconds before starting the application
 
@@ -127,7 +135,7 @@ void setup() {
   lcd.createChar(1, heart1);
   lcd.createChar(2, heart2);
 
-  // Serial.begin(9600);
+  Serial.begin(9600);
   // the zero refers to the MAX7219 number, it iszero for 1 chip
   lc.shutdown(0, false);  // turn off power saving,enables display
   lc.setIntensity(0, matrixBrightness);  // sets brightness(0~15 possiblevalues)
@@ -143,6 +151,13 @@ void setup() {
 
   delay(delayPeriod);
   lcd.clear();
+
+  // Player plr = {0, "Unknown"};
+  // EEPROM.put(0, plr);
+  Player plr;
+  EEPROM.get(0, plr);
+  Serial.println(plr.name);
+  Serial.println(plr.score);
 }
 
 void loop() {
@@ -155,7 +170,7 @@ void loop() {
   } else {
     play();
     displayGameUI();
-  }  
+  }
 }
 
 void displayMenu() {
@@ -185,7 +200,7 @@ void displayGameUI() {
   lcd.print("  Awesome Game");
   lcd.setCursor(0, 1);
   lcd.print("Score: ");
-  lcd.print(score);
+  lcd.print(currentPlayer.score);
   lcd.print("    ");
   int healthCopy = health;
   for (int i = 0; i < lives; i++) {
@@ -230,7 +245,7 @@ void play() {
 
   // eat the food => increase score => generate new food
   if (xPos == xFood && yPos == yFood) {
-    score ++;
+    currentPlayer.score++;
     generateFood();
   }
 }
@@ -244,7 +259,7 @@ void generateFood() {
 
 void updateMatrix() {
   for(int row = 0; row < matrixSize; row++) {
-    for(int col = s0; col < matrixSize; col++) {
+    for(int col = 0; col < matrixSize; col++) {
       lc.setLed(0, row, col, matrix[row][col]);
     }
   }
@@ -297,6 +312,22 @@ void updatePositions() {
     matrixChanged = true;
     matrix[xLastPos][yLastPos] = 0;
     matrix[xPos][yPos] = 1;
+  }
+}
+
+// called when a game ends
+void stop() {
+  Player plr;
+  EEPROM.get(0, plr);
+
+  if (currentPlayer.score > plr.score) {
+    EEPROM.put(0, currentPlayer);
+    lcd.clear();
+    lcd.setCursor(4, 0);
+    lcd.print("!HIGHSCORE!");
+    lcd.setCursor(0, 1);
+    lcd.print("Leaderboard # 1");
+    delay(delayPeriod);
   }
 }
 
@@ -354,6 +385,7 @@ void handleJoystickPress() {
                 lcd.clear();
               } else {
                 state = 0;
+                stop();
                 lcd.clear();
               }
               break;
