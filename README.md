@@ -59,3 +59,17 @@
   > Use a joystick to navigate through the matrix menu. 
   - [Source Code](https://github.com/tavi22/IntroductionToRobotics/blob/main/homework5/matrix_menu/matrix_menu.ino)
   - [Youtube Live Demo](https://www.youtube.com/watch?v=eaYhR-ADMG0)
+  <details open>
+  <summary> Menu features </summary>
+  
+  * Welcome screen
+  * Start/Stop game with joystick press
+  * Working mini-game
+  * Game UI with working score
+  * Highscore message
+  * Leaderboard with 1 entry
+  * Settings menu (clicking the settings options does not work)
+  * About page
+  * How to play page
+
+  </details>
