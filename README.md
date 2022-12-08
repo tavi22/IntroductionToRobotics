@@ -58,5 +58,4 @@
   - Requirements
   > Use a joystick to navigate through the matrix menu. 
   - [Source Code](https://github.com/tavi22/IntroductionToRobotics/blob/main/homework5/matrix_menu/matrix_menu.ino)
-  - [Photos](TBD)
-  - [Youtube Live Demo](TBD)
+  - [Youtube Live Demo](https://www.youtube.com/watch?v=eaYhR-ADMG0)
