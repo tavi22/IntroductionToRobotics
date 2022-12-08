@@ -66,11 +66,11 @@ byte matrix[matrixSize][matrixSize] = {
 
 // auxiliary menu variables
 const byte menuLength = 5;
-const byte submenuLength = 6;
+const byte submenuLength = 7;
 const long delayPeriod = 2000;
 
 String menuItems[menuLength] = {
-  "Start",
+  "Start           ",
   "Leaderboard",
   "Settings",
   "About",
@@ -78,13 +78,16 @@ String menuItems[menuLength] = {
 };
 
 String settingsSubmenu[submenuLength] = {
-  "Player name",
+  "Back",
+  "Name: ",
   "Difficulty",
   "LCD contrast",
   "LCD brightness",
-  "Matrix brightness",
+  "Matrix bright.",
   "Audio"
 };
+
+byte currentMenu = 0;
 
 // state 0 is when the menu is displayed and state 1 means the game has started
 byte state = 0;
@@ -166,7 +169,23 @@ void loop() {
   reading = digitalRead(pinSW);
   
   if (state == 0) {
-    displayMenu();
+    switch (currentMenu) {
+      case 0:
+        displayMenu();
+        break;
+      case 1:
+        displayLeaderboard();
+        break;
+      case 2:
+        displaySettings();
+        break;
+      case 3:
+        displayAbout();
+        break;
+      case 4:
+        displayHowTo();
+        break;
+    }
   } else {
     play();
     displayGameUI();
@@ -175,7 +194,7 @@ void loop() {
 
 void displayMenu() {
   int n = 0;
-  handleJoystickYaxis();
+  handleJoystickYaxis(4, 3);
   handleJoystickPress();
   
   for (int i = 0; i < 2; i++) {
@@ -332,31 +351,31 @@ void stop() {
 }
 
 // handle joystick movement for menu
-void handleJoystickYaxis() {
+void handleJoystickYaxis(byte maxCursor, byte maxState) {
 
   // menu items logic is to always see the next available option on the display
   if (yValue > upperThreshold && xValue < highMiddleThreshold && xValue > lowMiddleThreshold && joyMoved == 0) {
     if (menuCursor != 0) {
       menuCursor--;
-    } else menuCursor = 4;
-    if (displayState != 0 && displayState != 3 || displayState == 3 && menuCursor == 3) {
+    } else menuCursor = maxCursor;
+    if (displayState != 0 && displayState != maxState || displayState == maxState && menuCursor == maxState) {
       displayState--;
     } else if (displayState == 0 && menuCursor == 0) {
       displayState = 0;
     }
-    else displayState = 3;
+    else displayState = maxState;
 
     joyMoved++;
     lcd.clear();
 
   } else if (yValue < lowerThreshold && xValue < highMiddleThreshold && xValue > lowMiddleThreshold && joyMoved == 0) {
-    if (menuCursor != 4) {
+    if (menuCursor != maxCursor) {
       menuCursor++;
     } else menuCursor = 0;
-    if (displayState != 3) {
+    if (displayState != maxState) {
       displayState++;    
-    } else if (displayState == 3 && menuCursor == 4) {
-      displayState = 3;
+    } else if (displayState == maxState && menuCursor == maxCursor) {
+      displayState = maxState;
     }
     else displayState = 0;
 
@@ -378,26 +397,20 @@ void handleJoystickPress() {
       swState = reading;
 
       if (!swState) {
-          switch(menuCursor) {
-            case 0:
-              if (state == 0) {
-                state = 1;
-                lcd.clear();
-              } else {
-                state = 0;
-                stop();
-                lcd.clear();
-              }
-              break;
-            case 1:
-              displayLeaderboard();
-            case 2:
-              displaySettings();
-            case 3:
-              displayAbout();
-            case 4:
-              displayHowTo();
+          if (menuCursor == 0 && currentMenu == 0) {
+            if (state == 0) {
+              state = 1;
+            } else {
+              state = 0;              
+              stop();
+            }
+          } else {
+            currentMenu = menuCursor;
+            menuCursor = 0;
+            displayState = 0;
           }
+          lcd.setCursor(0, 0);
+          lcd.clear();
         }
       }
     }
@@ -406,17 +419,51 @@ void handleJoystickPress() {
 }
 
 void displayLeaderboard() {
-  // to do
+  handleJoystickPress();
+  Player plr;
+  EEPROM.get(0, plr);
+  lcd.setCursor(0, 0);
+  lcd.print("> Highscores");
+  lcd.setCursor(0, 1);
+  lcd.print("#1 ");
+  lcd.print(plr.name);
+  lcd.print(": ");
+  lcd.print(plr.score);
 }
 
 void displaySettings() {
-  // to do
+  int n = 0;
+  handleJoystickYaxis(6, 5);
+  handleJoystickPress();
+  
+  for (int i = 0; i < 2; i++) {
+    int j = i + displayState;
+    if (j == menuCursor) {
+      lcd.setCursor(0, n);
+      lcd.print("*");
+      lcd.print(settingsSubmenu[j]);
+      n++;
+    } else {
+      lcd.setCursor(0, n);
+      lcd.print(" ");
+      lcd.print(settingsSubmenu[j]);
+      n++;
+    }
+  }
 }
 
 void displayAbout() {
-  // to do
+  handleJoystickPress();
+  lcd.setCursor(0, 0);
+  lcd.print("@UniBuc Robotics");
+  lcd.setCursor(0, 1);
+  lcd.print("bit.ly/3iMw7p5");
 }
 
 void displayHowTo() {
-  // to do
+  handleJoystickPress();
+  lcd.setCursor(0, 0);
+  lcd.print("Move joystick");
+  lcd.setCursor(0, 1);
+  lcd.print("Eat the food");
 }
