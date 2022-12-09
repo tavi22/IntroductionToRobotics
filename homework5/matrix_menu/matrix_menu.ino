@@ -69,31 +69,16 @@ const byte menuLength = 5;
 const byte submenuLength = 7;
 const long delayPeriod = 2000;
 byte currentMenu = 0;
+const byte maxItemCount = 7;
+const byte menuOptionsCount = 5;
 
-
-String menuItems[menuLength] = {
-  "Start           ",
-  "Leaderboard",
-  "Settings",
-  "About",
-  "How to play"  
-};
-
-String settingsSubmenu[submenuLength] = {
-  "Back",
-  "Name",
-  "Difficulty",
-  "LCD contrast",
-  "LCD brightness",
-  "Matrix bright.",
-  "Audio"
-};
+const byte menuLengths[menuOptionsCount] = {5, 5, 7, 4, 3};
+String menuItems[maxItemCount];
 
 // state 0 is when the menu is displayed and state 1 means the game has started
 byte state = 0;
 // current menu option selected
 byte menuCursor = 0;
-byte lastCursor = 0;
 // which menu items are displayed
 byte displayState = 0;
 
@@ -122,7 +107,7 @@ byte heart2[] = {
 
 struct Player {
   int score;
-  char name[10];
+  String name;
 };
 
 Player currentPlayer = {0, "Newbie"};
@@ -132,11 +117,6 @@ Player currentPlayer = {0, "Newbie"};
 void setup() {
   pinMode(pinSW, INPUT_PULLUP);  // activate pull-up resistor on the push-button pin
 
-  lcd.begin(16,2);
-  lcd.createChar(1, heart1);
-  lcd.createChar(2, heart2);
-
-  Serial.begin(9600);
   // the zero refers to the MAX7219 number, it iszero for 1 chip
   lc.shutdown(0, false);  // turn off power saving,enables display
   lc.setIntensity(0, matrixBrightness);  // sets brightness(0~15 possiblevalues)
@@ -144,20 +124,22 @@ void setup() {
   matrix[xPos][yPos] = 1;
   matrix[xFood][yFood] = 1;
   
-// display welcome message for 2 seconds before starting the application
+// display welcome message for 2 seconds before starting the application + lcd initialize
   lcd.begin(16, 2);
+  lcd.createChar(1, heart1);
+  lcd.createChar(2, heart2);
+
+  lcd.setCursor(0, 0);
   lcd.print("Interesting Name");
   lcd.setCursor(4, 1);
   lcd.print("Welcome!");
   delay(delayPeriod);
-  lcd.clear();
 
+  lcd.clear();
+  loadMenuItems();
   // Player plr = {0, "Unknown"};
   // EEPROM.put(0, plr);
-  Player plr;
-  EEPROM.get(0, plr);
-  Serial.println(plr.name);
-  Serial.println(plr.score);
+  // Serial.begin(9600);
 }
 
 void loop() {
@@ -166,23 +148,7 @@ void loop() {
   reading = digitalRead(pinSW);
   
   if (state == 0) {
-    switch (currentMenu) {
-      case 0:
-        displayMenu();
-        break;
-      case 1:
-        displayLeaderboard();
-        break;
-      case 2:
-        displaySettings();
-        break;
-      case 3:
-        displayAbout();
-        break;
-      case 4:
-        displayHowTo();
-        break;
-    }
+    displayMenu();
   } else {
     play();
     displayGameUI();
@@ -191,7 +157,7 @@ void loop() {
 
 void displayMenu() {
   int n = 0;
-  handleJoystickYaxis(4, 3);
+  handleJoystickYaxis(menuLengths[currentMenu]-1, menuLengths[currentMenu]-2);
   handleJoystickPress();
   
   for (int i = 0; i < 2; i++) {
@@ -333,6 +299,7 @@ void updatePositions() {
 
 // called when a game ends
 void stop() {
+  lcd.clear();
   Player plr;
   EEPROM.get(0, plr);
 
@@ -396,9 +363,6 @@ void handleJoystickPress() {
       swState = reading;
 
       if (!swState) {
-        lcd.clear();
-        lcd.clear();
-
         if (menuCursor == 0 && currentMenu == 0) {
           if (state == 0) {
             state = 1;
@@ -407,9 +371,7 @@ void handleJoystickPress() {
             stop();
           }
         } else {
-          currentMenu = menuCursor;
-          menuCursor = 0;
-          displayState = 0;
+          switchMenu();
         }
       }
     }
@@ -418,52 +380,92 @@ void handleJoystickPress() {
   lastReading = reading;
 }
 
-void displayLeaderboard() {
-  handleJoystickPress();
-  Player plr;
-  EEPROM.get(0, plr);
-  lcd.setCursor(0, 0);
-  lcd.print("> Highscores");
-  lcd.setCursor(0, 1);
-  lcd.print("#1 ");
-  lcd.print(plr.name);
-  lcd.print(": ");
-  lcd.print(plr.score);
+// switch the menu according to the cursor (selected menu option)
+// TO DO: FINISH FUNCTION
+void switchMenu() {
+  lcd.clear();
+
+  switch (currentMenu) {
+    case 0:
+      currentMenu = menuCursor;
+      break;
+    case 1:
+      if (menuCursor == menuLengths[1] - 1) {
+        currentMenu = 0;
+      }
+      break;
+    case 2:
+      if (menuCursor == menuLengths[2] - 1) {
+        currentMenu = 0;
+      }
+      break;
+    case 3:
+      if (menuCursor == menuLengths[3] - 1) {
+          currentMenu = 0;
+      }
+      break;
+    case 4:
+      if (menuCursor == menuLengths[4] - 1) {
+          currentMenu = 0;
+      }
+      break;
+  }
+
+  loadMenuItems();
+  menuCursor = 0;
+  displayState = 0;
 }
 
-void displaySettings() {
-  int n = 0;
-  handleJoystickYaxis(6, 5);
-  handleJoystickPress();
-  
-  for (int i = 0; i < 2; i++) {
-    int j = i + displayState;
-    if (j == menuCursor) {
-      lcd.setCursor(0, n);
-      lcd.print("*");
-      lcd.print(settingsSubmenu[j]);
-      n++;
-    } else {
-      lcd.setCursor(0, n);
-      lcd.print(" ");
-      lcd.print(settingsSubmenu[j]);
-      n++;
-    }
+void loadMenuItems() {
+  switch (currentMenu) {
+    case 0:
+    // Main Menu
+      menuItems[0] = "Start";
+      menuItems[1] = "Leaderboard";
+      menuItems[2] = "Settings";
+      menuItems[3] = "About";
+      menuItems[4] = "How to play";
+      break;
+    case 1:
+    // Leaderboard
+      menuItems[0] = "> Leaderboard <";
+      loadLeaderboard();
+      menuItems[4] = "< Back";
+      break;
+    case 2:
+    // Settings
+      menuItems[0] = "Name";
+      menuItems[1] = "Difficulty";
+      menuItems[2] = "LCD contrast";
+      menuItems[3] = "LCD brightness";
+      menuItems[4] = "Matrix bright.";
+      menuItems[5] = "Audio";
+      menuItems[6] = "< Back";
+      break;
+    case 3:
+    // About
+      menuItems[0] = "Game Name";
+      menuItems[0] = "My Name";
+      menuItems[1] = "@UniBuc Robotics";
+      menuItems[2] = "bit.ly/3iMw7p5";
+      menuItems[3] = "< Back";
+      break;
+    case 4:
+    // How to play
+      menuItems[0] = "Move joystick";
+      menuItems[1] = "Eat the food";
+      menuItems[2] = "< Back";
+      break;
   }
 }
 
-void displayAbout() {
-  handleJoystickPress();
-  lcd.setCursor(0, 0);
-  lcd.print("@UniBuc Robotics");
-  lcd.setCursor(0, 1);
-  lcd.print("bit.ly/3iMw7p5");
+// load highscores from eeprom
+void loadLeaderboard() {
+  Player plr;
+  EEPROM.get(0, plr);
+  menuItems[1] = "#1 ";  
+  menuItems[2] = "#2 ";
+  menuItems[3] = "#3 ";
 }
 
-void displayHowTo() {
-  handleJoystickPress();
-  lcd.setCursor(0, 0);
-  lcd.print("Move joystick");
-  lcd.setCursor(0, 1);
-  lcd.print("Eat the food");
-}
+
