@@ -68,6 +68,8 @@ byte matrix[matrixSize][matrixSize] = {
 const byte menuLength = 5;
 const byte submenuLength = 7;
 const long delayPeriod = 2000;
+byte currentMenu = 0;
+
 
 String menuItems[menuLength] = {
   "Start           ",
@@ -79,7 +81,7 @@ String menuItems[menuLength] = {
 
 String settingsSubmenu[submenuLength] = {
   "Back",
-  "Name: ",
+  "Name",
   "Difficulty",
   "LCD contrast",
   "LCD brightness",
@@ -87,13 +89,11 @@ String settingsSubmenu[submenuLength] = {
   "Audio"
 };
 
-byte currentMenu = 0;
-
 // state 0 is when the menu is displayed and state 1 means the game has started
 byte state = 0;
-byte lastState = 0;
 // current menu option selected
 byte menuCursor = 0;
+byte lastCursor = 0;
 // which menu items are displayed
 byte displayState = 0;
 
@@ -129,8 +129,6 @@ Player currentPlayer = {0, "Newbie"};
 // const int structSize = 8;
 
 
-// display welcome message for 2 seconds before starting the application
-
 void setup() {
   pinMode(pinSW, INPUT_PULLUP);  // activate pull-up resistor on the push-button pin
 
@@ -146,12 +144,11 @@ void setup() {
   matrix[xPos][yPos] = 1;
   matrix[xFood][yFood] = 1;
   
-
+// display welcome message for 2 seconds before starting the application
   lcd.begin(16, 2);
   lcd.print("Interesting Name");
   lcd.setCursor(4, 1);
   lcd.print("Welcome!");
-
   delay(delayPeriod);
   lcd.clear();
 
@@ -342,11 +339,12 @@ void stop() {
   if (currentPlayer.score > plr.score) {
     EEPROM.put(0, currentPlayer);
     lcd.clear();
-    lcd.setCursor(4, 0);
+    lcd.setCursor(2, 0);
     lcd.print("!HIGHSCORE!");
     lcd.setCursor(0, 1);
     lcd.print("Leaderboard # 1");
     delay(delayPeriod);
+    lcd.clear();
   }
 }
 
@@ -391,29 +389,31 @@ void handleJoystickYaxis(byte maxCursor, byte maxState) {
 void handleJoystickPress() {
   if (lastReading != reading) {
       lastDebounce = millis();
-    }
+  }
+
   if ((millis() - lastDebounce) >= debounceDelay) {
     if (swState != reading) {
       swState = reading;
 
       if (!swState) {
-          if (menuCursor == 0 && currentMenu == 0) {
-            if (state == 0) {
-              state = 1;
-            } else {
-              state = 0;              
-              stop();
-            }
+        lcd.clear();
+        lcd.clear();
+
+        if (menuCursor == 0 && currentMenu == 0) {
+          if (state == 0) {
+            state = 1;
           } else {
-            currentMenu = menuCursor;
-            menuCursor = 0;
-            displayState = 0;
+            state = 0;              
+            stop();
           }
-          lcd.setCursor(0, 0);
-          lcd.clear();
+        } else {
+          currentMenu = menuCursor;
+          menuCursor = 0;
+          displayState = 0;
         }
       }
     }
+  }
 
   lastReading = reading;
 }
