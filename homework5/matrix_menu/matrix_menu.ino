@@ -10,6 +10,8 @@ const byte d5 = 6;
 const byte d6 = 5;
 const byte d7 = 4;
 LiquidCrystal lcd(RS,enable,d4,d5,d6,d7);
+const int maxLcdBrightness;
+const int maxLcdContrast;
 
 // joystick variables
 const int pinSW = 2;  // digital pin connected to switch output
@@ -36,7 +38,8 @@ const byte matrixSize = 8;
 LedControl lc = LedControl(dinPin, clockPin, loadPin,1);  //DIN, CLK, LOAD, No.
 
 // auxiliary matrix variables
-byte matrixBrightness = 2;
+byte matrixBright = 2;
+const int maxMatrixBrigthness;
 byte xPos = 0;
 byte yPos = 0;
 byte xLastPos = 0;
@@ -69,10 +72,14 @@ const byte menuLength = 5;
 const byte submenuLength = 7;
 const long delayPeriod = 2000;
 byte currentMenu = 0;
-const byte maxItemCount = 7;
+const byte maxItemCount = 8;
 const byte menuOptionsCount = 5;
+const byte maxDifficulty = 3;
+byte audioState = 1;
+const byte scrollSound = 0;
+const byte clickSound = 1;
 
-const byte menuLengths[menuOptionsCount] = {5, 5, 7, 4, 3};
+const byte menuLengths[menuOptionsCount] = {5, 5, 8, 4, 3};
 String menuItems[maxItemCount];
 
 // state 0 is when the menu is displayed and state 1 means the game has started
@@ -119,7 +126,7 @@ void setup() {
 
   // the zero refers to the MAX7219 number, it iszero for 1 chip
   lc.shutdown(0, false);  // turn off power saving,enables display
-  lc.setIntensity(0, matrixBrightness);  // sets brightness(0~15 possiblevalues)
+  lc.setIntensity(0, matrixBright);  // sets brightness(0~15 possiblevalues)
   lc.clearDisplay(0);  // clear screen
   matrix[xPos][yPos] = 1;
   matrix[xFood][yFood] = 1;
@@ -327,11 +334,12 @@ void handleJoystickYaxis(byte maxCursor, byte maxState) {
       displayState--;
     } else if (displayState == 0 && menuCursor == 0) {
       displayState = 0;
+    } else {
+      displayState = maxState;
     }
-    else displayState = maxState;
-
     joyMoved++;
     lcd.clear();
+    buzz(audioState, scrollSound);
 
   } else if (yValue < lowerThreshold && xValue < highMiddleThreshold && xValue > lowMiddleThreshold && joyMoved == 0) {
     if (menuCursor != maxCursor) {
@@ -341,11 +349,12 @@ void handleJoystickYaxis(byte maxCursor, byte maxState) {
       displayState++;    
     } else if (displayState == maxState && menuCursor == maxCursor) {
       displayState = maxState;
+    } else {
+    displayState = 0;
     }
-    else displayState = 0;
-
     joyMoved++;
     lcd.clear();
+    buzz(audioState, scrollSound);
 
   } else if (xValue < highMiddleThreshold && xValue > lowMiddleThreshold && yValue < highMiddleThreshold && yValue > lowMiddleThreshold) {
       joyMoved = 0;
@@ -384,27 +393,51 @@ void handleJoystickPress() {
 // TO DO: FINISH FUNCTION
 void switchMenu() {
   lcd.clear();
+  buzz(audioState, clickSound);
 
   switch (currentMenu) {
+    // Main Menu
     case 0:
       currentMenu = menuCursor;
       break;
+    // Leaderboard
     case 1:
+      // back option
       if (menuCursor == menuLengths[1] - 1) {
         currentMenu = 0;
       }
       break;
+    // Settings
     case 2:
+      // back option
       if (menuCursor == menuLengths[2] - 1) {
         currentMenu = 0;
+      } else if (menuCursor == 0) {
+        changeName();
+      } else if (menuCursor == 1) {
+        difficulty();
+      } else if (menuCursor == 2) {
+        lcdContrast();
+      } else if (menuCursor == 3) {
+        lcdBrightness();
+      } else if (menuCursor == 4) {
+        matrixBrightness();
+      } else if (menuCursor == 4) {
+        audio();
+      } else if (menuCursor == 5) {
+        resetLeaderboard();
       }
       break;
+    // About
     case 3:
+      // back option
       if (menuCursor == menuLengths[3] - 1) {
           currentMenu = 0;
       }
       break;
+    // How to play
     case 4:
+      // back option
       if (menuCursor == menuLengths[4] - 1) {
           currentMenu = 0;
       }
@@ -434,13 +467,14 @@ void loadMenuItems() {
       break;
     case 2:
     // Settings
-      menuItems[0] = "Name";
+      menuItems[0] = "Change name";
       menuItems[1] = "Difficulty";
       menuItems[2] = "LCD contrast";
       menuItems[3] = "LCD brightness";
       menuItems[4] = "Matrix bright.";
       menuItems[5] = "Audio";
-      menuItems[6] = "< Back";
+      menuItems[6] = "Reset";
+      menuItems[7] = "< Back";
       break;
     case 3:
     // About
@@ -467,5 +501,50 @@ void loadLeaderboard() {
   menuItems[2] = "#2 ";
   menuItems[3] = "#3 ";
 }
+
+// reset all leaderboard scores
+void resetLeaderboard() {
+  // TO DO
+}
+
+void changeName() {
+  // TO DO
+}
+
+void difficulty() {
+  // TO DO
+}
+
+void lcdContrast() {
+  // TO DO
+}
+
+void lcdBrightness() {
+  // TO DO
+}
+
+void matrixBrightness() {
+  // TO DO
+}
+
+void audio() {
+  // TO DO
+}
+
+// buzzer sounds for menu switching and scrolling up and down
+// option = 0 -> scroll || option = 1 -> click
+void buzz(byte audioState, byte option) {
+  if (audioState) {
+    // to do - buzz
+  }
+
+  if (option) {
+    // click
+  } else {
+    // scroll
+  }
+
+}
+
 
 
